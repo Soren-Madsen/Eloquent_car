@@ -88,7 +88,6 @@ class RentController extends Controller
             return view('rents');
         }
     }
-
     /**
      * Update the specified resource in storage.
      */
@@ -108,7 +107,22 @@ class RentController extends Controller
             $rent->delete();
             return redirect()->route('admin.rent.index')->with('success', 'The rental has been deleted successfully.');
         } else {
-            return redirect()->route('rent.index');
+        
+            $rent = Rent::findOrFail($id);
+
+            if ($rent->user_id !== Auth::user()->id) {
+                abort(403);
+            }
+
+            $car = Car::find($rent->car_id);
+            if ($car) {
+                $car->available = true;
+                $car->save();
+            }
+
+            $rent->delete();
+
+            return redirect()->route('rent.index')->with('success', 'The car has been returned successfully.');
         }
     }
 }
